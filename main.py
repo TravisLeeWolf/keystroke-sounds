@@ -10,7 +10,6 @@ import pynput
 import pygame
 
 from pynput.keyboard import Key
-
 KEY_ROW = [
     [Key.esc, '`', Key.tab, Key.caps_lock, Key.shift, Key.ctrl_l, '1', 'q', 'a', 'z', Key.alt_l],
     ['2', 'w', 's', 'x', '3', 'e', 'd', 'c'],
@@ -21,37 +20,36 @@ KEY_ROW = [
     [Key.delete, Key.backspace, ']', '\\', Key.enter, Key.up, Key.down, Key.home, Key.page_up, Key.page_down, Key.end, Key.right]
 ]
 
-L_VOLUME = [1.0, 0.9, 0.7, 0.5, 0.3, 0.2, 0.0]
-R_VOLUME = [0.0, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
+L_VOLUME = [1.0, 0.9, 0.7, 0.5, 0.3, 0.2, 0.0, random.uniform(0.7, 1.0)]
+R_VOLUME = [0.0, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, random.uniform(0.7, 1.0)]
 
 pygame.init()
-
 
 keypress = pygame.mixer.Sound('./assets/keypress.wav')
 spacebar = pygame.mixer.Sound('./assets/space.wav')
 mouseclick = pygame.mixer.Sound('./assets/mouse.wav')
 channel = pygame.mixer.Channel(0)
 
-def play_sound(sound, left_volume="random", right_volume="random"):
+def play_sound(sound, left_volume, right_volume):
     """
-    Plays a sound through pygame's mixer module.
-
-    If the left_volume or right_volume arguments are set to "random", a
-    random volume between 0.7 and 1.0 will be used instead.
+    Plays a sound with optional random volume.
 
     Args:
         sound (pygame.mixer.Sound): The sound to play.
-        left_volume (float, optional): The volume of the sound on the left
-            speaker. Defaults to "random".
-        right_volume (float, optional): The volume of the sound on the right
-            speaker. Defaults to "random".
-    """
-    if left_volume == "random":
-        left_volume = random.uniform(0.7, 1.0)
-        right_volume = random.uniform(0.7, 1.0)
+        left_volume (float, optional): The volume for the left channel. Defaults to "random".
+        right_volume (float, optional): The volume for the right channel. Defaults to "random".
 
-    channel.set_volume(left_volume, right_volume)
-    channel.play(sound)
+    Raises:
+        Exception: If there is an error playing the sound.
+
+    Returns:
+        None
+    """
+    try:
+        channel.set_volume(left_volume, right_volume)
+        channel.play(sound)
+    except Exception as e:
+        print(f"Error playing sound: {e}")
 
 def on_press(key):
     """
@@ -60,12 +58,24 @@ def on_press(key):
     If the key is the spacebar, the spacebar sound is played.
     Otherwise, the keypress sound is played with a volume that depends on the
     location of the key on the keyboard.
+
+    Args:
+        key (Key): The key that was pressed.
+
+    Raises:
+        Exception: If there is an error playing the sound.
+
+    Returns:
+        None
     """
-    if key == pynput.keyboard.Key.space:
-        play_sound(spacebar)
-    else:
-        indexLR = get_LR_volume(key)
-        play_sound(keypress, L_VOLUME[indexLR], R_VOLUME[indexLR])
+    try:
+        if key == pynput.keyboard.Key.space:
+            play_sound(spacebar, L_VOLUME[7], R_VOLUME[7])
+        else:
+            indexLR = get_LR_volume(key)
+            play_sound(keypress, L_VOLUME[indexLR], R_VOLUME[indexLR])
+    except Exception as e:
+        print(f"Error playing sound: {e}")
 
 def get_LR_volume(key):
     """
@@ -83,9 +93,12 @@ def get_LR_volume(key):
             if key.char in KEY_ROW[i]:
                 return i
     except AttributeError:
-        for i in range(len(KEY_ROW)):
-            if key in KEY_ROW[i]:
-                return i
+        try:
+            for i in range(len(KEY_ROW)):
+                if key in KEY_ROW[i]:
+                    return i
+        except TypeError:
+            return 7
 
 def on_click(_x, _y, _button, pressed):
     """
@@ -94,7 +107,7 @@ def on_click(_x, _y, _button, pressed):
     If the mouse is clicked, the mouseclick sound is played.
     """
     if pressed:
-        play_sound(mouseclick)
+        play_sound(mouseclick, L_VOLUME[7], R_VOLUME[7])
 
 
 with pynput.keyboard.Listener(on_press=on_press) as keyboard_listener, \
