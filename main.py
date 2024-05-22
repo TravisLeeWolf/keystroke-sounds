@@ -28,7 +28,7 @@ pygame.init()
 keypress = pygame.mixer.Sound('./assets/keypress.wav')
 spacebar = pygame.mixer.Sound('./assets/space.wav')
 mouseclick = pygame.mixer.Sound('./assets/mouse.wav')
-channel = pygame.mixer.Channel(0)
+channels = [pygame.mixer.Channel(i) for i in range(5)]
 
 def play_sound(sound, left_volume, right_volume):
     """
@@ -45,11 +45,15 @@ def play_sound(sound, left_volume, right_volume):
     Returns:
         None
     """
-    try:
-        channel.set_volume(left_volume, right_volume)
-        channel.play(sound)
-    except Exception as e:
-        print(f"Error playing sound: {e}")
+
+    for channel in channels:
+        if not channel.get_busy():
+            try:
+                channel.set_volume(left_volume, right_volume)
+                channel.play(sound)
+                return
+            except Exception as e:
+                print(f"Error playing sound: {e}")
 
 def on_press(key):
     """
